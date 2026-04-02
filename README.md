@@ -3,7 +3,7 @@
 Dashboard financeiro pessoal com integração automática ao C6 Bank via Pluggy (Open Finance).
 
 > Sem servidor, sem banco de dados, sem mensalidade. Roda 100% no browser.
-
+Acesse em : https://mbraga23.github.io/Fianancas
 ---
 
 ## Funcionalidades

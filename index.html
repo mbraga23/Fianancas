@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinançasCLAR</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f11;--bg2:#18181c;--bg3:#222228;--border:#2e2e38;
+  --text:#f0f0f4;--text2:#8888a0;--text3:#55556a;
+  --green:#22c55e;--green-bg:rgba(34,197,94,0.1);
+  --red:#ef4444;--red-bg:rgba(239,68,68,0.1);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.1);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.1);
+  --accent:#7c6df8;--accent-bg:rgba(124,109,248,0.12);
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --radius:10px;--radius-lg:16px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;min-height:100vh}
+.app{max-width:960px;margin:0 auto;padding:16px}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:var(--accent-bg);border:1px solid var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-text{font-size:16px;font-weight:600;letter-spacing:-0.3px}
+.logo-sub{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.nav{display:flex;gap:4px;flex-wrap:wrap}
+.nav-btn{background:none;border:none;color:var(--text2);cursor:pointer;padding:6px 12px;border-radius:6px;font-size:13px;font-family:var(--font);transition:all 0.15s}
+.nav-btn:hover{background:var(--bg3);color:var(--text)}
+.nav-btn.active{background:var(--accent-bg);color:var(--accent);border:1px solid rgba(124,109,248,0.2)}
+
+/* SECTIONS */
+.section{display:none}.section.active{display:block}
+
+/* GRIDS */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+@media(max-width:640px){
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .grid-3,.grid-2{grid-template-columns:1fr}
+}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
+.card-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;font-family:var(--mono);margin-bottom:8px}
+.card-value{font-size:24px;font-weight:600;font-family:var(--mono);letter-spacing:-0.5px}
+.card-sub{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:20px;font-family:var(--mono)}
+.badge.green{background:var(--green-bg);color:var(--green)}
+.badge.red{background:var(--red-bg);color:var(--red)}
+.badge.amber{background:var(--amber-bg);color:var(--amber)}
+.badge.blue{background:var(--blue-bg);color:var(--blue)}
+.badge.accent{background:var(--accent-bg);color:var(--accent)}
+
+/* PANELS */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.panel-title{font-size:14px;font-weight:500}
+.panel-action{background:none;border:1px solid var(--border);color:var(--text2);cursor:pointer;padding:5px 12px;border-radius:6px;font-size:12px;font-family:var(--font);transition:all 0.15s}
+.panel-action:hover{border-color:var(--accent);color:var(--accent)}
+
+/* TRANSAÇÕES */
+.tx-list{display:flex;flex-direction:column;gap:1px}
+.tx-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.tx-row:last-child{border-bottom:none}
+.tx-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-cat{font-size:11px;color:var(--text3)}
+.tx-val{font-family:var(--mono);font-size:13px;font-weight:500;white-space:nowrap}
+.tx-date{font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap}
+.tx-del{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;font-size:16px;line-height:1}
+.tx-del:hover{color:var(--red)}
+
+/* BARRAS */
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.bar-label{font-size:12px;color:var(--text2);width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.8s cubic-bezier(.4,0,.2,1)}
+.bar-val{font-size:12px;font-family:var(--mono);color:var(--text2);width:75px;text-align:right;flex-shrink:0}
+
+/* DÍVIDAS */
+.debt-row{display:flex;flex-direction:column;gap:6px;padding:12px 0;border-bottom:1px solid var(--border)}
+.debt-row:last-child{border-bottom:none}
+.debt-header{display:flex;justify-content:space-between;align-items:center}
+.debt-name{font-size:13px;font-weight:500}
+.debt-track{width:100%;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.debt-fill{height:100%;border-radius:2px;transition:width 0.8s ease}
+.debt-meta{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);font-family:var(--mono)}
+
+/* FORMS */
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;color:var(--text2);margin-bottom:6px;display:block;font-family:var(--mono)}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color 0.15s}
+.form-input:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;appearance:none;cursor:pointer}
+.form-select:focus{border-color:var(--accent)}
+.btn-primary{background:var(--accent);border:none;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-family:var(--font);font-weight:500;cursor:pointer;width:100%;transition:opacity 0.15s}
+.btn-primary:hover{opacity:0.85}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-secondary{background:none;border:1px solid var(--border);color:var(--text2);padding:10px 20px;border-radius:8px;font-size:14px;font-family:var(--font);cursor:pointer;transition:all 0.15s;width:100%}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ALERTS */
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.alert.warn{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,158,11,0.2)}
+.alert.info{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(59,130,246,0.2)}
+.alert.err{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,0.2)}
+.alert.ok{background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,0.2)}
+.alert-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+
+/* PLUGGY CONFIG */
+.pluggy-step{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--accent-bg);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--accent);font-family:var(--mono);flex-shrink:0;margin-top:2px}
+.step-text{font-size:13px;color:var(--text2);line-height:1.6}
+.step-text strong{color:var(--text);font-weight:500}
+.conn-status{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;font-size:13px}
+.conn-status.ok{background:var(--green-bg);color:var(--green)}
+.conn-status.err{background:var(--red-bg);color:var(--red)}
+.conn-status.warn{background:var(--amber-bg);color:var(--amber)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* CHARTS */
+.chart-wrap{position:relative;width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px;font-size:12px;color:var(--text2)}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* MISC */
+.empty-state{text-align:center;padding:32px;color:var(--text3)}
+.empty-icon{font-size:28px;margin-bottom:8px}
+.sync-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text3)}
+.spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">💰</div>
+      <div>
+        <div class="logo-text">FinançasCLAR</div>
+        <div class="logo-sub" id="connLabel">sem conexão bancária</div>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="nav-btn active" onclick="showTab('dashboard')">Dashboard</button>
+      <button class="nav-btn" onclick="showTab('lancamentos')">Lançamentos</button>
+      <button class="nav-btn" onclick="showTab('dividas')">Dívidas</button>
+      <button class="nav-btn" onclick="showTab('config')">Integração</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="section active">
+    <div class="grid-4">
+      <div class="card">
+        <div class="card-title">Receita abr</div>
+        <div class="card-value" style="color:var(--green)" id="kpiRec">R$3.961</div>
+        <div class="card-sub"><span class="badge green" id="kpiRecBadge">+19% vs mar</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Gastos abr</div>
+        <div class="card-value" style="color:var(--red)" id="kpiDesp">R$3.285</div>
+        <div class="card-sub"><span class="badge red" id="kpiDespBadge">87% da receita</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Saldo livre</div>
+        <div class="card-value" id="kpiSaldo">R$676</div>
+        <div class="card-sub"><span class="badge amber">baixo</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Total dívidas</div>
+        <div class="card-value" style="color:var(--red)">R$12.274</div>
+        <div class="card-sub"><span class="badge red">11 pendências</span></div>
+      </div>
+    </div>
+
+    <div class="alert warn" id="dashAlert">
+      <span class="alert-icon">⚠</span>
+      <span>Saldo final de abril fica negativo quando incluídas as dívidas variáveis. Configure a integração para importar transações automaticamente.</span>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Gastos por categoria</span>
+          <span class="badge accent">abr/2026</span>
+        </div>
+        <div class="legend" id="pieLegend"></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="pieChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Evolução mensal</span>
+          <span style="font-size:12px;color:var(--text3);font-family:var(--mono)">2026</span>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:rgba(34,197,94,0.7)"></span>Receitas</span>
+          <span class="legend-item"><span class="legend-dot" style="background:rgba(239,68,68,0.6)"></span>Despesas</span>
+        </div>
+        <div class="chart-wrap" style="height:180px"><canvas id="barChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Últimas transações</span>
+        <button class="panel-action" onclick="showTab('lancamentos')">ver todas →</button>
+      </div>
+      <div class="tx-list" id="txRecent"></div>
+      <div class="sync-bar" style="margin-top:12px" id="syncBar">
+        <span style="flex:1">Importação automática via Pluggy</span>
+        <span class="badge amber" id="syncStatus">aguardando configuração</span>
+        <button class="panel-action" onclick="showTab('config')">configurar →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LANÇAMENTOS -->
+  <div id="lancamentos" class="section">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Novo lançamento</span>
+          <span class="badge accent">manual</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descrição</label>
+          <input class="form-input" type="text" id="txDesc" placeholder="Ex: Supermercado BH">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Valor (R$)</label>
+            <input class="form-input" type="number" id="txVal" placeholder="0,00" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" id="txType">
+              <option value="despesa">Despesa</option>
+              <option value="receita">Receita</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Categoria</label>
+            <select class="form-select" id="txCat">
+              <option>Alimentação</option>
+              <option>Transporte</option>
+              <option>Moradia</option>
+              <option>Saúde</option>
+              <option>Lazer</option>
+              <option>Dívida</option>
+              <option>Salário</option>
+              <option>MS Elétrica</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data</label>
+            <input class="form-input" type="date" id="txDate">
+          </div>
+        </div>
+        <button class="btn-primary" onclick="addTx()">+ Adicionar lançamento</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Resumo do mês</span>
+          <span class="badge blue">abril 2026</span>
+        </div>
+        <div id="monthSummary"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Lançamentos do mês</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select class="form-select" style="width:auto;padding:5px 10px;font-size:12px" id="filterCat" onchange="renderTxFull()">
+            <option value="">Todas categorias</option>
+            <option>Alimentação</option><option>Transporte</option><option>Moradia</option>
+            <option>Saúde</option><option>Lazer</option><option>Dívida</option>
+            <option>Salário</option><option>MS Elétrica</option><option>Outro</option>
+          </select>
+          <select class="form-select" style="width:auto;padding:5px 10px;font-size:12px" id="filterType" onchange="renderTxFull()">
+            <option value="">Todos</option>
+            <option value="receita">Receitas</option>
+            <option value="despesa">Despesas</option>
+          </select>
+        </div>
+      </div>
+      <div id="txFull"></div>
+    </div>
+  </div>
+
+  <!-- DÍVIDAS -->
+  <div id="dividas" class="section">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Visão geral</span></div>
+        <div style="text-align:center;padding:8px 0 16px">
+          <div style="font-size:36px;font-weight:600;font-family:var(--mono);color:var(--red)">R$12.274</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:4px">saldo devedor total</div>
+        </div>
+        <div class="alert info" style="margin-bottom:0">
+          <span class="alert-icon">💡</span>
+          <span>Estratégia <strong>bola de neve</strong>: quite primeiro Cartão Will (R$57,60) e Riachuello (R$434,72), use o valor liberado nas maiores dívidas.</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Simulador de quitação</span></div>
+        <div class="form-group">
+          <label class="form-label">Pagamento mensal extra (R$)</label>
+          <input type="range" min="200" max="2000" step="50" value="500" id="paySlider" oninput="updateSim()" style="width:100%">
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:13px">
+          <span style="color:var(--text2)">Valor mensal:</span>
+          <span style="font-family:var(--mono);font-weight:500" id="payVal">R$ 500</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:12px;color:var(--text3)">Tempo estimado:</span>
+            <span style="font-family:var(--mono);color:var(--amber)" id="simMonths">~25 meses</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:12px;color:var(--text3)">Quitado em:</span>
+            <span style="font-family:var(--mono)" id="simDate">mai/2028</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="font-size:12px;color:var(--text3)">Juros estimados (12% a.a.):</span>
+            <span style="font-family:var(--mono);color:var(--red)" id="simJuros">+R$2.840</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Dívidas detalhadas</span>
+        <span style="font-size:12px;color:var(--text3)">limite × saldo devedor</span>
+      </div>
+      <div id="debtList"></div>
+    </div>
+  </div>
+
+  <!-- INTEGRAÇÃO -->
+  <div id="config" class="section">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Conectar C6 Bank via Pluggy</span>
+          <span class="badge blue">Open Finance</span>
+        </div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+          Usa o Open Finance regulado pelo BACEN. Você autoriza diretamente no app do C6 — sem compartilhar senha.
+        </div>
+        <div style="margin-bottom:20px">
+          <div class="pluggy-step">
+            <div class="step-num">1</div>
+            <div class="step-text">Crie sua conta em <strong><a href="https://dashboard.pluggy.ai" target="_blank">dashboard.pluggy.ai</a></strong></div>
+          </div>
+          <div class="pluggy-step">
+            <div class="step-num">2</div>
+            <div class="step-text">Acesse <strong>Applications</strong> → copie o <strong>Client ID</strong> e <strong>Client Secret</strong></div>
+          </div>
+          <div class="pluggy-step">
+            <div class="step-num">3</div>
+            <div class="step-text">Cole abaixo e clique em <strong>Testar</strong> para validar</div>
+          </div>
+          <div class="pluggy-step">
+            <div class="step-num">4</div>
+            <div class="step-text">Clique em <strong>Conectar C6</strong> e autorize no app do banco</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Client ID</label>
+          <input class="form-input" type="text" id="pluggyClientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Client Secret</label>
+          <input class="form-input" type="password" id="pluggyClientSecret" placeholder="••••••••••••••••••••">
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button class="btn-secondary" onclick="testPluggy()">Testar conexão</button>
+          <button class="btn-primary" id="btnConnect" onclick="connectPluggy()" disabled>Conectar C6 →</button>
+        </div>
+        <div id="pluggyStatus"></div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.6px">Worker URL (proxy seguro)</div>
+          <div style="font-size:12px;font-family:var(--mono);color:var(--accent);background:var(--bg3);padding:8px 12px;border-radius:6px;word-break:break-all">https://pluggy-proxy.marceloveras.workers.dev</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">Status da integração</span></div>
+          <div id="connStatusList" style="display:flex;flex-direction:column;gap:8px">
+            <div class="conn-status warn"><span class="dot"></span><span>C6 Bank — aguardando conexão</span></div>
+          </div>
+          <div style="margin-top:14px;font-size:12px;color:var(--text3);line-height:1.7">
+            Após conectar, transações são importadas a cada 24h automaticamente. Gastos no cartão, conta corrente e Pix entram direto no dashboard.
+          </div>
+          <div style="margin-top:12px">
+            <button class="btn-secondary" onclick="syncNow()" id="btnSync" style="font-size:12px;padding:7px 14px;width:auto" disabled>↻ Sincronizar agora</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Bancos suportados</span>
+            <span class="badge accent">via Pluggy</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            ${['C6 Bank','Nubank','Banco do Brasil','Itaú','Bradesco','Santander','Sicredi','Inter'].map((b,i,arr)=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;${i<arr.length-1?'border-bottom:1px solid var(--border)':''}">
+              <span style="font-size:13px">${b}</span>
+              <span class="badge green">suportado</span>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WORKER = 'https://pluggy-proxy.marceloveras.workers.dev';
+const MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const CATS = {
+  'Alimentação':'🍔','Transporte':'🚗','Moradia':'🏠','Saúde':'💊',
+  'Lazer':'🎮','Dívida':'💳','Salário':'💼','MS Elétrica':'⚡','Outro':'📦'
+};
+const CAT_COLORS = ['#7c6df8','#22c55e','#f59e0b','#3b82f6','#ef4444','#ec4899','#10b981','#f97316','#8b5cf6'];
+
+let txData = JSON.parse(localStorage.getItem('txData') || 'null') || [
+  {id:1,desc:'Salário ACE',val:3327.02,type:'receita',cat:'Salário',date:'2026-04-05',auto:false},
+  {id:2,desc:'MS Elétrica',val:634,type:'receita',cat:'MS Elétrica',date:'2026-04-10',auto:false},
+  {id:3,desc:'Consórcio carro',val:317,type:'despesa',cat:'Transporte',date:'2026-04-01',auto:false},
+  {id:4,desc:'Internet Claro',val:94.9,type:'despesa',cat:'Moradia',date:'2026-04-01',auto:false},
+  {id:5,desc:'Claro controle',val:28.46,type:'despesa',cat:'Saúde',date:'2026-04-02',auto:false},
+  {id:6,desc:'Claro mãe',val:35,type:'despesa',cat:'Saúde',date:'2026-04-02',auto:false},
+  {id:7,desc:'Seguro carro',val:198,type:'despesa',cat:'Transporte',date:'2026-04-03',auto:false},
+  {id:8,desc:'Seguro de vida',val:18.84,type:'despesa',cat:'Saúde',date:'2026-04-04',auto:false},
+  {id:9,desc:'Inter Carlos',val:2530,type:'despesa',cat:'Dívida',date:'2026-04-05',auto:false},
+  {id:10,desc:'Capital Sicredi',val:30,type:'despesa',cat:'Outro',date:'2026-04-06',auto:false},
+  {id:11,desc:'Luz Cemig',val:180,type:'despesa',cat:'Moradia',date:'2026-04-07',auto:false},
+  {id:12,desc:'Água',val:150,type:'despesa',cat:'Moradia',date:'2026-04-07',auto:false},
+];
+let nextId = Math.max(...txData.map(t=>t.id)) + 1;
+
+const debts = [
+  {name:'Cartão Ourocard',limit:6297,balance:null},
+  {name:'Empréstimo BB',limit:2732,balance:2101.75},
+  {name:'99 Pay',limit:1873,balance:2875.68},
+  {name:'Cartão Nubank',limit:4900,balance:3229.93},
+  {name:'Cartão Will',limit:800,balance:57.6},
+  {name:'Cartão Riachuello',limit:800,balance:434.72},
+  {name:'Empréstimo Jeitto',limit:1980,balance:582.66},
+  {name:'Recarga Pay',limit:1500,balance:1620.44},
+  {name:'Shopee Pay',limit:1895,balance:563.14},
+  {name:'Cartão Itaú',limit:3000,balance:785.73},
+  {name:'Cartão Sicredi',limit:3150,balance:null},
+];
+
+function save(){localStorage.setItem('txData',JSON.stringify(txData));}
+function fmt(v){return 'R$'+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function showTab(t){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(t).classList.add('active');
+  const map={dashboard:0,lancamentos:1,dividas:2,config:3};
+  document.querySelectorAll('.nav-btn')[map[t]].classList.add('active');
+  if(t==='lancamentos'){renderTxFull();renderMonthSummary();}
+  if(t==='dividas'){renderDebts();updateSim();}
+  if(t==='dashboard'){updateKPIs();renderTxRecent();}
+}
+
+function getTxMonth(){return txData.filter(t=>t.date.startsWith('2026-04'));}
+
+function updateKPIs(){
+  const txs = getTxMonth();
+  const rec = txs.filter(t=>t.type==='receita').reduce((a,t)=>a+t.val,0);
+  const desp = txs.filter(t=>t.type==='despesa').reduce((a,t)=>a+t.val,0);
+  const saldo = rec - desp;
+  document.getElementById('kpiRec').textContent = fmt(rec);
+  document.getElementById('kpiDesp').textContent = fmt(desp);
+  document.getElementById('kpiSaldo').textContent = fmt(saldo);
+  document.getElementById('kpiSaldo').style.color = saldo >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('kpiDespBadge').textContent = rec > 0 ? Math.round(desp/rec*100)+'% da receita' : '—';
+}
+
+function renderTxRecent(){
+  const txs = [...getTxMonth()].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+  document.getElementById('txRecent').innerHTML = txs.map(t=>`
+    <div class="tx-row">
+      <div class="tx-icon" style="background:${t.type==='receita'?'var(--green-bg)':'var(--bg3)'}">${CATS[t.cat]||'📦'}</div>
+      <div class="tx-info">
+        <div class="tx-name">${t.desc}</div>
+        <div class="tx-cat">${t.cat}${t.auto?' <span class="badge blue" style="font-size:10px;padding:1px 5px">Pluggy</span>':''}</div>
+      </div>
+      <div class="tx-date">${t.date.slice(8)}/${t.date.slice(5,7)}</div>
+      <div class="tx-val" style="color:${t.type==='receita'?'var(--green)':'var(--red)'}">${t.type==='receita'?'+':'-'}${fmt(t.val)}</div>
+    </div>`).join('');
+}
+
+function renderTxFull(){
+  const catF = document.getElementById('filterCat').value;
+  const typeF = document.getElementById('filterType').value;
+  let txs = getTxMonth().filter(t=>{
+    if(catF && t.cat!==catF) return false;
+    if(typeF && t.type!==typeF) return false;
+    return true;
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+  const el = document.getElementById('txFull');
+  if(!txs.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">Nenhum lançamento encontrado</div></div>';return;}
+  el.innerHTML='<div class="tx-list">'+txs.map(t=>`
+    <div class="tx-row">
+      <div class="tx-icon" style="background:${t.type==='receita'?'var(--green-bg)':'var(--bg3)'}">${CATS[t.cat]||'📦'}</div>
+      <div class="tx-info">
+        <div class="tx-name">${t.desc}</div>
+        <div class="tx-cat">${t.cat}${t.auto?' <span class="badge blue" style="font-size:10px;padding:1px 5px">Pluggy</span>':''}</div>
+      </div>
+      <div class="tx-date">${t.date.slice(8)}/${t.date.slice(5,7)}</div>
+      <div class="tx-val" style="color:${t.type==='receita'?'var(--green)':'var(--red)'}">${t.type==='receita'?'+':'-'}${fmt(t.val)}</div>
+      <button class="tx-del" onclick="removeTx(${t.id})">×</button>
+    </div>`).join('')+'</div>';
+}
+
+function renderMonthSummary(){
+  const txs = getTxMonth();
+  const rec = txs.filter(t=>t.type==='receita').reduce((a,t)=>a+t.val,0);
+  const desp = txs.filter(t=>t.type==='despesa').reduce((a,t)=>a+t.val,0);
+  const saldo = rec - desp;
+  const cats = {};
+  txs.filter(t=>t.type==='despesa').forEach(t=>{cats[t.cat]=(cats[t.cat]||0)+t.val;});
+  const top = Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('monthSummary').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2);font-size:13px">Receitas</span><span style="color:var(--green);font-family:var(--mono)">+${fmt(rec)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2);font-size:13px">Despesas</span><span style="color:var(--red);font-family:var(--mono)">-${fmt(desp)}</span></div>
+      <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;justify-content:space-between">
+        <span style="font-weight:500;font-size:13px">Saldo</span>
+        <span style="font-family:var(--mono);font-weight:500;color:${saldo>=0?'var(--green)':'var(--red)'}">${saldo>=0?'+':''}${fmt(saldo)}</span>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.6px">Top despesas</div>
+    ${top.map(([cat,val])=>`
+      <div class="bar-row">
+        <div class="bar-label">${CATS[cat]||''} ${cat}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${desp>0?Math.min(100,(val/desp*100)).toFixed(0):0}%;background:var(--accent)"></div></div>
+        <div class="bar-val">${fmt(val)}</div>
+      </div>`).join('')}`;
+}
+
+function addTx(){
+  const desc = document.getElementById('txDesc').value.trim();
+  const val = parseFloat(document.getElementById('txVal').value);
+  const type = document.getElementById('txType').value;
+  const cat = document.getElementById('txCat').value;
+  const date = document.getElementById('txDate').value;
+  if(!desc||!val||isNaN(val)||!date){alert('Preencha todos os campos!');return;}
+  txData.push({id:nextId++,desc,val,type,cat,date,auto:false});
+  save();
+  document.getElementById('txDesc').value='';
+  document.getElementById('txVal').value='';
+  renderTxFull();renderMonthSummary();updateKPIs();updateCharts();renderTxRecent();
+}
+
+function removeTx(id){
+  if(!confirm('Remover este lançamento?')) return;
+  txData = txData.filter(t=>t.id!==id);
+  save();
+  renderTxFull();renderMonthSummary();updateKPIs();updateCharts();renderTxRecent();
+}
+
+function renderDebts(){
+  document.getElementById('debtList').innerHTML = debts.map(d=>{
+    const pct = d.balance ? Math.min(100,(d.balance/d.limit)*100) : 0;
+    const color = pct > 80 ? '#ef4444' : pct > 50 ? '#f59e0b' : '#22c55e';
+    return `
+    <div class="debt-row">
+      <div class="debt-header">
+        <span class="debt-name">${d.name}</span>
+        <span style="font-family:var(--mono);font-size:13px;color:${color}">${d.balance?fmt(d.balance):'—'}</span>
+      </div>
+      <div class="debt-track"><div class="debt-fill" style="width:${pct.toFixed(0)}%;background:${color}"></div></div>
+      <div class="debt-meta"><span>limite: ${fmt(d.limit)}</span><span>${pct.toFixed(0)}% utilizado</span></div>
+    </div>`;
+  }).join('');
+}
+
+function updateSim(){
+  const pay = parseInt(document.getElementById('paySlider').value);
+  document.getElementById('payVal').textContent = 'R$ '+pay;
+  const total = 12274, rate = 0.12/12;
+  let bal = total, months = 0;
+  while(bal > 0 && months < 240){bal = bal*(1+rate)-pay; months++;}
+  const juros = Math.max(0, months*pay - total);
+  document.getElementById('simMonths').textContent = '~'+months+' meses';
+  const d = new Date(2026,3,1); d.setMonth(d.getMonth()+months);
+  document.getElementById('simDate').textContent = MONTHS[d.getMonth()]+'/'+d.getFullYear();
+  document.getElementById('simJuros').textContent = '+'+fmt(juros);
+}
+
+// PLUGGY
+async function testPluggy(){
+  const cid = document.getElementById('pluggyClientId').value.trim();
+  const sec = document.getElementById('pluggyClientSecret').value.trim();
+  const st = document.getElementById('pluggyStatus');
+  if(!cid||!sec){st.innerHTML='<div class="alert err"><span class="alert-icon">✕</span>Preencha Client ID e Secret</div>';return;}
+  st.innerHTML='<div class="alert warn"><span class="alert-icon">↻</span>Testando credenciais...</div>';
+  try{
+    const r = await fetch(WORKER+'/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clientUserId:'marcelo-test'})});
+    if(r.ok){
+      const d = await r.json();
+      if(d.accessToken){
+        st.innerHTML='<div class="alert ok"><span class="alert-icon">✓</span>Worker respondeu corretamente! Clique em "Conectar C6".</div>';
+        localStorage.setItem('pluggy_ok','1');
+        document.getElementById('btnConnect').disabled = false;
+        document.getElementById('btnSync').disabled = false;
+      } else {
+        st.innerHTML='<div class="alert err"><span class="alert-icon">✕</span>Worker não retornou token. Verifique os secrets no Cloudflare.</div>';
+      }
+    } else {
+      st.innerHTML='<div class="alert err"><span class="alert-icon">✕</span>Erro '+r.status+'. Verifique se o Worker está rodando.</div>';
+    }
+  }catch(e){
+    st.innerHTML='<div class="alert err"><span class="alert-icon">✕</span>Erro de conexão: '+e.message+'</div>';
+  }
+}
+
+async function connectPluggy(){
+  const st = document.getElementById('pluggyStatus');
+  st.innerHTML='<div class="alert warn"><span class="alert-icon">↻</span>Obtendo token de conexão...</div>';
+  try{
+    const r = await fetch(WORKER+'/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clientUserId:'marcelo'})});
+    const d = await r.json();
+    if(!d.accessToken){st.innerHTML='<div class="alert err"><span class="alert-icon">✕</span>Token não obtido. Rode wrangler secret put novamente.</div>';return;}
+    const s = document.createElement('script');
+    s.src = 'https://cdn.pluggy.ai/pluggy-connect/v2.1.0/pluggy-connect.js';
+    s.onload = ()=>{
+      if(window.PluggyConnect){
+        new window.PluggyConnect({
+          connectToken: d.accessToken,
+          onSuccess:(item)=>{
+            localStorage.setItem('pluggy_item', item.id);
+            st.innerHTML='<div class="alert ok"><span class="alert-icon">✓</span>C6 conectado! Item ID: '+item.id+'</div>';
+            document.getElementById('connStatusList').innerHTML='<div class="conn-status ok"><span class="dot"></span><span>C6 Bank — conectado ✓</span></div>';
+            document.getElementById('connLabel').textContent = 'C6 Bank conectado';
+            document.getElementById('syncStatus').textContent = 'conectado';
+            document.getElementById('syncStatus').className = 'badge green';
+            syncNow();
+          },
+          onError:(e)=>{st.innerHTML='<div class="alert err"><span class="alert-icon">✕</span>Erro: '+e+'</div>';}
+        }).init();
+      } else {
+        st.innerHTML='<div class="alert err"><span class="alert-icon">✕</span>Widget não carregou. Tente novamente.</div>';
+      }
+    };
+    document.head.appendChild(s);
+  }catch(e){
+    st.innerHTML='<div class="alert err"><span class="alert-icon">✕</span>'+e.message+'</div>';
+  }
+}
+
+async function syncNow(){
+  const itemId = localStorage.getItem('pluggy_item');
+  if(!itemId) return;
+  document.getElementById('syncStatus').textContent = 'sincronizando...';
+  try{
+    const accR = await fetch(WORKER+'/accounts?itemId='+itemId);
+    const accD = await accR.json();
+    if(!accD.results||!accD.results.length) return;
+    const now = new Date(2026,3,1);
+    const from = '2026-04-01', to = '2026-04-30';
+    for(const acc of accD.results){
+      const txR = await fetch(WORKER+'/transactions?accountId='+acc.id+'&from='+from+'&to='+to);
+      const txD = await txR.json();
+      if(txD.results){
+        txD.results.forEach(tx=>{
+          const exists = txData.find(t=>t.id==='pluggy_'+tx.id);
+          if(!exists){
+            txData.push({
+              id:'pluggy_'+tx.id,
+              desc: tx.description||tx.descriptionRaw||'Transação C6',
+              val: Math.abs(tx.amount),
+              type: tx.amount < 0 ? 'despesa' : 'receita',
+              cat: mapCat(tx.category),
+              date: tx.date.slice(0,10),
+              auto: true
+            });
+          }
+        });
+      }
+    }
+    save();
+    updateKPIs();renderTxRecent();updateCharts();
+    document.getElementById('syncStatus').textContent = 'sincronizado ✓';
+    document.getElementById('syncStatus').className = 'badge green';
+  }catch(e){
+    document.getElementById('syncStatus').textContent = 'erro ao sincronizar';
+    document.getElementById('syncStatus').className = 'badge red';
+  }
+}
+
+function mapCat(c){
+  if(!c) return 'Outro';
+  const cl = c.toLowerCase();
+  if(cl.includes('food')||cl.includes('restaurant')||cl.includes('aliment')) return 'Alimentação';
+  if(cl.includes('transport')||cl.includes('fuel')||cl.includes('uber')) return 'Transporte';
+  if(cl.includes('health')||cl.includes('pharma')||cl.includes('saúde')) return 'Saúde';
+  if(cl.includes('entertain')||cl.includes('lazer')) return 'Lazer';
+  if(cl.includes('housing')||cl.includes('rent')||cl.includes('morad')) return 'Moradia';
+  if(cl.includes('salary')||cl.includes('income')||cl.includes('salário')) return 'Salário';
+  if(cl.includes('loan')||cl.includes('credit')||cl.includes('dívida')) return 'Dívida';
+  return 'Outro';
+}
+
+// CHARTS
+let pieChart, barChart;
+function initCharts(){
+  const txs = getTxMonth();
+  const cats = {};
+  txs.filter(t=>t.type==='despesa').forEach(t=>{cats[t.cat]=(cats[t.cat]||0)+t.val;});
+  const labels = Object.keys(cats);
+  const vals = Object.values(cats);
+  const colors = CAT_COLORS.slice(0,labels.length);
+
+  document.getElementById('pieLegend').innerHTML = labels.map((l,i)=>`
+    <span class="legend-item"><span class="legend-dot" style="background:${colors[i]}"></span>${l}</span>`).join('');
+
+  pieChart = new Chart(document.getElementById('pieChart'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>' '+i.label+': '+fmt(i.raw)}}}}
+  });
+
+  barChart = new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{
+      labels:['Jan','Fev','Mar','Abr'],
+      datasets:[
+        {label:'Receitas',data:[3096,5712,3968,3961],backgroundColor:'rgba(34,197,94,0.7)',borderRadius:4,borderSkipped:false},
+        {label:'Despesas',data:[2985,4638,3247,3285],backgroundColor:'rgba(239,68,68,0.6)',borderRadius:4,borderSkipped:false}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#55556a',font:{size:11}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#55556a',font:{size:11},callback:v=>'R$'+v.toLocaleString('pt-BR')}}
+      }}
+  });
+}
+
+function updateCharts(){
+  if(!pieChart) return;
+  const txs = getTxMonth();
+  const cats = {};
+  txs.filter(t=>t.type==='despesa').forEach(t=>{cats[t.cat]=(cats[t.cat]||0)+t.val;});
+  pieChart.data.labels = Object.keys(cats);
+  pieChart.data.datasets[0].data = Object.values(cats);
+  pieChart.data.datasets[0].backgroundColor = CAT_COLORS.slice(0,Object.keys(cats).length);
+  pieChart.update();
+  document.getElementById('pieLegend').innerHTML = Object.keys(cats).map((l,i)=>`
+    <span class="legend-item"><span class="legend-dot" style="background:${CAT_COLORS[i]}"></span>${l}</span>`).join('');
+}
+
+// INIT
+document.getElementById('txDate').value = '2026-04-01';
+updateKPIs();
+renderTxRecent();
+if(localStorage.getItem('pluggy_item')){
+  document.getElementById('connStatusList').innerHTML = '<div class="conn-status ok"><span class="dot"></span><span>C6 Bank — conectado ✓</span></div>';
+  document.getElementById('connLabel').textContent = 'C6 Bank conectado';
+  document.getElementById('syncStatus').textContent = 'conectado';
+  document.getElementById('syncStatus').className = 'badge green';
+  document.getElementById('btnSync').disabled = false;
+  document.getElementById('btnConnect').disabled = false;
+}
+setTimeout(initCharts, 50);
+</script>
+</body>
+</html>
